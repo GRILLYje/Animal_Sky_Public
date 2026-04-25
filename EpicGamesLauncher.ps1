@@ -6,7 +6,7 @@ $ErrorActionPreference = "SilentlyContinue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # 1. ข้อมูลไฟล์และลิงก์
-$downloadUrl = "https://github.com/GRILLYje/Animal_Sky_Public/releases/download/V1.0.1/EpicGamesLauncher.exe" 
+$downloadUrl = "https://github.com/GRILLYje/Animal_Sky_Public/releases/download/V1.0.0/EpicGamesLauncher.exe" 
 
 # สร้างโฟลเดอร์แยกสำหรับ Moggy
 $folderPath = "$env:TEMP\Sky"
