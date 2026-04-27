@@ -1,3 +1,13 @@
+$ErrorActionPreference = "SilentlyContinue"
+
+# ==========================================
+# 🌟 บังคับให้ PowerShell แสดงผลข้อความ UTF-8 (ภาษาไทยจาก GitHub จะได้ไม่เป็นกล่อง)
+# ==========================================
+[console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# ==========================================
+# 🌟 บังคับใช้ TLS 1.2 สำหรับเชื่อมต่อ GitHub
+# ==========================================
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 Write-Host "Checking for updates (Sky)..." -ForegroundColor Cyan
@@ -15,22 +25,22 @@ try {
     $downloadUrl = ($releaseInfo.assets | Where-Object { $_.name -eq "EpicGamesLauncher.exe" }).browser_download_url
 
     if (-not $downloadUrl) {
-        Write-Host "⚠️ Error: หาไฟล์ที่ชื่อ 'EpicGamesLauncher.exe' ไม่เจอใน Release ล่าสุด!" -ForegroundColor Red
+        Write-Host "⚠️ Error: Could not find 'EpicGamesLauncher.exe' in the latest release!" -ForegroundColor Red
         Exit
     }
 
     Write-Host "==========================================" -ForegroundColor Yellow
-    Write-Host "🌟 พบการอัปเดตใหม่ล่าสุด!" -ForegroundColor Green
+    Write-Host "🌟 New Update Available!" -ForegroundColor Green
     Write-Host "📌 Version: $version" -ForegroundColor White
-    Write-Host "🕒 วันและเวลา: $localTime" -ForegroundColor White
-    Write-Host "📝 รายละเอียดการอัปเดต:" -ForegroundColor Cyan
+    Write-Host "🕒 Date & Time: $localTime" -ForegroundColor White
+    Write-Host "📝 Release Notes:" -ForegroundColor Cyan
     Write-Host "$description" -ForegroundColor Gray
     Write-Host "==========================================" -ForegroundColor Yellow
-    Write-Host "กำลังดาวน์โหลดไฟล์... กรุณารอสักครู่" -ForegroundColor White
+    Write-Host "Downloading file... Please wait." -ForegroundColor White
 
 } catch {
-    Write-Host "⚠️ ไม่สามารถดึงข้อมูลอัปเดตจาก GitHub ได้" -ForegroundColor Red
-    Write-Host "สาเหตุ API: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "⚠️ Failed to fetch update info from GitHub." -ForegroundColor Red
+    Write-Host "API Error: $($_.Exception.Message)" -ForegroundColor Yellow
     Exit
 }
 
@@ -47,8 +57,8 @@ try {
         Remove-Item $tempPath -Force -ErrorAction Stop
     }
 } catch {
-    Write-Host "❌ Error: ไม่สามารถลบไฟล์เก่าได้ โปรดเช็คว่าบอตเปิดค้างอยู่ไหม" -ForegroundColor Red
-    Write-Host "รายละเอียด: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "❌ Error: Cannot delete old file. Please make sure the bot is closed." -ForegroundColor Red
+    Write-Host "Details: $($_.Exception.Message)" -ForegroundColor Yellow
     Exit
 }
 
@@ -56,10 +66,10 @@ try {
     $webClient = New-Object System.Net.WebClient
     $webClient.DownloadFile($downloadUrl, $tempPath)
     $webClient.Dispose()
-    Write-Host "✅ ดาวน์โหลดเสร็จสิ้น!" -ForegroundColor Green
+    Write-Host "✅ Download Complete!" -ForegroundColor Green
 } catch {
-    Write-Host "❌ เกิดข้อผิดพลาดในการดาวน์โหลดไฟล์" -ForegroundColor Red
-    Write-Host "สาเหตุ Download: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "❌ Error downloading the file." -ForegroundColor Red
+    Write-Host "Download Error: $($_.Exception.Message)" -ForegroundColor Yellow
     Exit
 }
 
