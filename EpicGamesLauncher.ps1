@@ -1,4 +1,6 @@
-$ErrorActionPreference = "SilentlyContinue"
+# ปิดการซ่อน Error ชั่วคราว (หรือเปลี่ยนเป็น "Continue") เพื่อให้เห็นบั๊กเวลาโปรแกรมโหลดไม่ขึ้น
+# $ErrorActionPreference = "SilentlyContinue" 
+$ErrorActionPreference = "Continue"
 
 [console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -52,10 +54,9 @@ try {
     Exit
 }
 
+# ใช้ Invoke-WebRequest แทน WebClient เพื่อให้เสถียรขึ้นและแสดง Error ชัดเจน
 try {
-    $webClient = New-Object System.Net.WebClient
-    $webClient.DownloadFile($downloadUrl, $tempPath)
-    $webClient.Dispose()
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing
     Write-Host "Download Complete!" -ForegroundColor Green
 } catch {
     Write-Host "Error downloading the file." -ForegroundColor Red
