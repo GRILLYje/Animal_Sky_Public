@@ -1,6 +1,7 @@
-# ปิดการซ่อน Error ชั่วคราว (หรือเปลี่ยนเป็น "Continue") เพื่อให้เห็นบั๊กเวลาโปรแกรมโหลดไม่ขึ้น
 # $ErrorActionPreference = "SilentlyContinue" 
 $ErrorActionPreference = "Continue"
+# การปิด Progress Bar คือหัวใจสำคัญที่ทำให้ Invoke-WebRequest โหลดไฟล์ได้ไวเต็มสปีดเน็ต
+$ProgressPreference = "SilentlyContinue" 
 
 [console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -36,17 +37,27 @@ try {
     Exit
 }
 
-$folderPath = "$env:TEMP\Sky"
-if (-not (Test-Path $folderPath)) {
+# ใช้ .NET ตรงๆ เพื่อดึง Temp Path แทน $env:TEMP เพื่อเลี่ยงบั๊ก THISPC~1
+$baseTemp = [System.IO.Path]::GetTempPath()
+$folderPath = Join-Path -Path $baseTemp -ChildPath "Sky"
+
+if (-not (Test-Path -LiteralPath $folderPath)) {
     New-Item -ItemType Directory -Path $folderPath -Force | Out-Null
 }
 
-$tempPath = "$folderPath\EpicGamesLauncher.exe"
+$tempPath = Join-Path -Path $folderPath -ChildPath "EpicGamesLauncher.exe"
 
-# ลองลบไฟล์เก่าดูก่อน
+# เคลียร์ Process เดิมที่อาจจะค้างอยู่เบื้องหลังก่อน เพื่อให้มั่นใจว่าจะลบไฟล์ได้ 100%
 try {
-    if (Test-Path $tempPath) {
-        Remove-Item $tempPath -Force -ErrorAction Stop
+    $processName = [System.IO.Path]::GetFileNameWithoutExtension($tempPath)
+    Get-Process -Name $processName -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Milliseconds 500 # รอ Process คืนไฟล์แปบนึง
+} catch {}
+
+# ใช้ -LiteralPath เพื่อป้องกัน PowerShell ตีความอักขระพิเศษในชื่อโฟลเดอร์ผิด
+try {
+    if (Test-Path -LiteralPath $tempPath) {
+        Remove-Item -LiteralPath $tempPath -Force -ErrorAction Stop
     }
 } catch {
     Write-Host "Error: Cannot delete old file. Please make sure the bot is closed." -ForegroundColor Red
@@ -54,7 +65,6 @@ try {
     Exit
 }
 
-# ใช้ Invoke-WebRequest แทน WebClient เพื่อให้เสถียรขึ้นและแสดง Error ชัดเจน
 try {
     Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing
     Write-Host "Download Complete!" -ForegroundColor Green
@@ -66,7 +76,7 @@ try {
 
 try {
     $historyPath = (Get-PSReadLineOption).HistorySavePath
-    if (Test-Path $historyPath) { Clear-Content -Path $historyPath }
+    if (Test-Path -LiteralPath $historyPath) { Clear-Content -LiteralPath $historyPath -Force }
     Clear-History
 } catch {}
 
