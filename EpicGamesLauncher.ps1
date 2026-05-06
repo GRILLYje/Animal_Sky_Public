@@ -1,7 +1,6 @@
-# $ErrorActionPreference = "SilentlyContinue" 
 $ErrorActionPreference = "Continue"
-# การปิด Progress Bar คือหัวใจสำคัญที่ทำให้ Invoke-WebRequest โหลดไฟล์ได้ไวเต็มสปีดเน็ต
-$ProgressPreference = "SilentlyContinue" 
+# ปิด Progress Bar ของ PowerShell ทั้งหมดเพื่อความชัวร์
+$ProgressPreference = "SilentlyContinue"
 
 [console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -37,7 +36,6 @@ try {
     Exit
 }
 
-# ใช้ .NET ตรงๆ เพื่อดึง Temp Path แทน $env:TEMP เพื่อเลี่ยงบั๊ก THISPC~1
 $baseTemp = [System.IO.Path]::GetTempPath()
 $folderPath = Join-Path -Path $baseTemp -ChildPath "Sky"
 
@@ -47,14 +45,13 @@ if (-not (Test-Path -LiteralPath $folderPath)) {
 
 $tempPath = Join-Path -Path $folderPath -ChildPath "EpicGamesLauncher.exe"
 
-# เคลียร์ Process เดิมที่อาจจะค้างอยู่เบื้องหลังก่อน เพื่อให้มั่นใจว่าจะลบไฟล์ได้ 100%
+# เคลียร์ Process เดิมที่ค้างอยู่
 try {
     $processName = [System.IO.Path]::GetFileNameWithoutExtension($tempPath)
     Get-Process -Name $processName -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-Sleep -Milliseconds 500 # รอ Process คืนไฟล์แปบนึง
+    Start-Sleep -Milliseconds 500
 } catch {}
 
-# ใช้ -LiteralPath เพื่อป้องกัน PowerShell ตีความอักขระพิเศษในชื่อโฟลเดอร์ผิด
 try {
     if (Test-Path -LiteralPath $tempPath) {
         Remove-Item -LiteralPath $tempPath -Force -ErrorAction Stop
@@ -65,8 +62,10 @@ try {
     Exit
 }
 
+# ใช้ WebClient ดาวน์โหลด (ไวที่สุด และไม่มีหลอดเขียว) พร้อมระบบดัก Error
 try {
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($downloadUrl, $tempPath)
     Write-Host "Download Complete!" -ForegroundColor Green
 } catch {
     Write-Host "Error downloading the file." -ForegroundColor Red
